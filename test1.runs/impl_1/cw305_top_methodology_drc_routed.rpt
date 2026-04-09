@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -----------------------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
-| Date         : Thu Apr  9 15:52:45 2026
+| Date         : Thu Apr  9 16:08:21 2026
 | Host         : ubuntu2 running 64-bit Ubuntu 24.04.4 LTS
 | Command      : report_methodology -file cw305_top_methodology_drc_routed.rpt -pb cw305_top_methodology_drc_routed.pb -rpx cw305_top_methodology_drc_routed.rpx
 | Design       : cw305_top
@@ -23,21 +23,15 @@ Table of Contents
           Floorplan: design_1
       Design limits: <entire design considered>
              Max checks: <unlimited>
-             Checks found: 50
-+-----------+----------+------------------------------------------+--------+
-| Rule      | Severity | Description                              | Checks |
-+-----------+----------+------------------------------------------+--------+
-| TIMING-10 | Warning  | Missing property on synchronizer         | 1      |
-| XDCH-2    | Warning  | Same min and max delay values on IO port | 49     |
-+-----------+----------+------------------------------------------+--------+
+             Checks found: 49
++--------+----------+------------------------------------------+--------+
+| Rule   | Severity | Description                              | Checks |
++--------+----------+------------------------------------------+--------+
+| XDCH-2 | Warning  | Same min and max delay values on IO port | 49     |
++--------+----------+------------------------------------------+--------+
 
 2. REPORT DETAILS
 -----------------
-TIMING-10#1 Warning
-Missing property on synchronizer  
-One or more logic synchronizer has been detected between 2 clock domains but the synchronizer does not have the property ASYNC_REG defined on one or both registers. It is recommended to run report_cdc for a complete and detailed CDC coverage
-Related violations: <none>
-
 XDCH-2#1 Warning
 Same min and max delay values on IO port  
 The same input delay of 0.000 ns has been defined on port 'j16_sel' relative to clock usb_clk for both max and min. Make sure this reflects the design intent.

@@ -152,30 +152,88 @@ module cw305_top #(
         end
     end
 
-    // -------------------------------------------------------------------------
-    // CDC: trig_stretch (usb_clk, ~1.33 µs) → crypt_clk domain
+    // =========================================================================
+    // CDC + trigger — fully synchronised design
     //
-    // reg_go is only ~21 ns wide (1 usb_clk cycle at 48 MHz).
-    // crypt_clk at 10 MHz has a 100 ns period → it almost never catches reg_go.
-    // trig_stretch is already held high for 64 usb_clk cycles (~1.33 µs),
-    // which is >> 2 crypt_clk periods (200 ns), so a 2-FF synchronizer is safe.
-    // Rising-edge detect gives exactly one go pulse per trigger in crypt_clk domain.
-    // -------------------------------------------------------------------------
-    reg go_sync1, go_sync2, go_prev;
-    always @(posedge crypt_clk) begin
-        go_sync1 <= (trig_stretch != 6'd0);
-        go_sync2 <= go_sync1;
-        go_prev  <= go_sync2;
+    // PROBLEM (previous design):
+    //   tio_trigger came from trig_stretch in usb_clk domain.
+    //   The adder fired from go_pulse_crypt in crypt_clk domain.
+    //   Because the two clocks are asynchronous, the time between the scope
+    //   seeing the trigger and the adder actually switching power changed
+    //   randomly every trace → traces misaligned, power analysis corrupted.
+    //
+    // SOLUTION — three steps:
+    //
+    //   Step 1 (usb_clk): Stretch reg_go to a stable level for 64 usb_clk
+    //     cycles (~1.33 µs).  reg_go itself is only ~21 ns (1 usb_clk cycle
+    //     at 48 MHz); crypt_clk at 10 MHz has a 100 ns period, so a direct
+    //     2-FF sync would miss the pulse ~79 % of the time.
+    //     go_stretch_active is a clean registered single bit — safer to cross
+    //     into a different clock domain than a raw multi-bit comparison.
+    //
+    //   Step 2 (crossing): 2-FF synchroniser with (* ASYNC_REG = "TRUE" *).
+    //     ASYNC_REG tells Vivado to:
+    //       • place both FFs in the same slice (minimises routing delay
+    //         between them, maximising metastability recovery time), and
+    //       • apply set_false_path / set_max_delay constraints automatically
+    //         so timing analysis does not flag a false violation.
+    //     go_stretch_active is stable for 1.33 µs >> 2 crypt_clk periods
+    //     (200 ns), so the synchroniser is guaranteed to catch the level.
+    //
+    //   Step 3 (crypt_clk): Rising-edge detect → go_pulse_crypt fires once
+    //     per trigger.  BOTH the adder result AND trig_stretch are driven by
+    //     this same pulse on the same clock edge.
+    //     tio_trigger comes from crypt_clk trig_stretch → the scope trigger
+    //     and the power event are now aligned to within one crypt_clk cycle,
+    //     every single trace.
+    // =========================================================================
+
+    // --- Step 1: stretch reg_go to a stable level in usb_clk domain --------
+    reg [5:0] go_stretch_ctr;      // countdown counter (usb_clk)
+    reg       go_stretch_active;   // registered single bit — clean sync input
+    always @(posedge usb_clk) begin
+        if (reg_go)
+            go_stretch_ctr <= 6'd63;           // load 64-cycle hold on every go
+        else if (go_stretch_ctr != 6'd0)
+            go_stretch_ctr <= go_stretch_ctr - 6'd1;
+        // Register the level: ensures the synchroniser sees a glitch-free bit
+        go_stretch_active <= (go_stretch_ctr != 6'd0) | reg_go;
     end
-    wire go_pulse_crypt = go_sync2 & ~go_prev;   // single rising-edge pulse in crypt_clk
+
+    // --- Step 2: 2-FF synchroniser into crypt_clk domain -------------------
+    // ASYNC_REG packs both FFs into the same slice and suppresses false timing
+    // errors — do not remove this attribute.
+    (* ASYNC_REG = "TRUE" *) reg go_sync1, go_sync2;
+    reg go_prev;
+    always @(posedge crypt_clk) begin
+        go_sync1 <= go_stretch_active;   // first synchroniser stage
+        go_sync2 <= go_sync1;            // second synchroniser stage (metastability resolved)
+        go_prev  <= go_sync2;            // delayed copy for edge detection
+    end
+
+    // --- Step 3: rising-edge detect — one pulse per trigger -----------------
+    wire go_pulse_crypt = go_sync2 & ~go_prev;
 
     // -------------------------------------------------------------------------
-    // DUT: adder runs on crypt_clk for measurable switching activity
+    // DUT + trigger stretcher — both driven by go_pulse_crypt in crypt_clk
+    //
+    // Running trig_stretch here (not in usb_clk) means tio_trigger fires on
+    // the exact crypt_clk edge where result_r is being computed.
+    // The scope trigger and the power switching event are now locked together.
     // -------------------------------------------------------------------------
     reg [8:0] result_r;
+    reg [5:0] trig_stretch;        // trigger width counter (crypt_clk domain)
     always @(posedge crypt_clk) begin
+        // Adder fires on the rising edge of the synchronised go signal
         if (go_pulse_crypt)
             result_r <= reg_operand_a + reg_operand_b;
+
+        // Trigger stretcher: hold tio_trigger high for 64 crypt_clk cycles
+        // (~6.4 µs at 10 MHz) so the CW-Lite reliably detects the edge.
+        if (go_pulse_crypt)
+            trig_stretch <= 6'd63;
+        else if (trig_stretch != 6'd0)
+            trig_stretch <= trig_stretch - 6'd1;
     end
 
     // -------------------------------------------------------------------------
@@ -197,22 +255,10 @@ module cw305_top #(
     assign reg_datai = reg_read_data;
 
     // -------------------------------------------------------------------------
-    // Trigger pulse stretcher
-    // reg_go is only 1 usb_clk cycle wide (~21 ns at 48 MHz).
-    // Stretch to 64 cycles (~1.3 µs) so the CW-Lite reliably detects it.
-    // -------------------------------------------------------------------------
-    reg [5:0] trig_stretch;
-    always @(posedge usb_clk) begin
-        if (reg_go)
-            trig_stretch <= 6'd63;
-        else if (trig_stretch != 6'd0)
-            trig_stretch <= trig_stretch - 6'd1;
-    end
-
-    // -------------------------------------------------------------------------
     // Outputs
     // -------------------------------------------------------------------------
-    assign tio_trigger = (trig_stretch != 6'd0) | reg_go;
+    // tio_trigger is purely crypt_clk domain — aligned with the power event.
+    assign tio_trigger = (trig_stretch != 6'd0);
 
     assign led1 = result_r[8];          // carry-out from the adder
     assign led2 = reg_user_led[0];      // LED5: bit 0 of REG_USER_LED

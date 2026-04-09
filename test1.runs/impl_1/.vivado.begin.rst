@@ -23,3 +23,8 @@
     <Process Command="vivado" Owner="m" Host="ubuntu2" Pid="36946" HostCore="12" HostMemory="14168472">
     </Process>
 </ProcessHandle>
+<?xml version="1.0"?>
+<ProcessHandle Version="1" Minor="0">
+    <Process Command="vivado" Owner="m" Host="ubuntu2" Pid="44704" HostCore="12" HostMemory="14168472">
+    </Process>
+</ProcessHandle>
