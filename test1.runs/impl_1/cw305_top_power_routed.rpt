@@ -1,7 +1,7 @@
 Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2025 Advanced Micro Devices, Inc. All Rights Reserved.
 -------------------------------------------------------------------------------------------------------------------------------------------------
 | Tool Version     : Vivado v.2025.2 (lin64) Build 6299465 Fri Nov 14 12:34:56 MST 2025
-| Date             : Thu Apr  9 15:43:35 2026
+| Date             : Thu Apr  9 15:52:45 2026
 | Host             : ubuntu2 running 64-bit Ubuntu 24.04.4 LTS
 | Command          : report_power -file cw305_top_power_routed.rpt -pb cw305_top_power_summary_routed.pb -rpx cw305_top_power_routed.rpx
 | Design           : cw305_top
@@ -30,7 +30,7 @@ Table of Contents
 ----------
 
 +--------------------------+--------------+
-| Total On-Chip Power (W)  | 0.125        |
+| Total On-Chip Power (W)  | 0.124        |
 | Design Power Budget (W)  | Unspecified* |
 | Power Budget Margin (W)  | NA           |
 | Dynamic (W)              | 0.027        |
@@ -53,15 +53,15 @@ Table of Contents
 | On-Chip        | Power (W) | Used     | Available | Utilization (%) |
 +----------------+-----------+----------+-----------+-----------------+
 | Clocks         |     0.002 |        4 |       --- |             --- |
-| Slice Logic    |    <0.001 |      115 |       --- |             --- |
-|   LUT as Logic |    <0.001 |       36 |     63400 |            0.06 |
-|   Register     |    <0.001 |       65 |    126800 |            0.05 |
+| Slice Logic    |    <0.001 |      120 |       --- |             --- |
+|   LUT as Logic |    <0.001 |       39 |     63400 |            0.06 |
+|   Register     |    <0.001 |       66 |    126800 |            0.05 |
 |   CARRY4       |    <0.001 |        3 |     15850 |            0.02 |
 |   Others       |     0.000 |        4 |       --- |             --- |
-| Signals        |    <0.001 |      123 |       --- |             --- |
-| I/O            |     0.025 |       32 |       170 |           18.82 |
+| Signals        |    <0.001 |      124 |       --- |             --- |
+| I/O            |     0.024 |       32 |       170 |           18.82 |
 | Static Power   |     0.097 |          |           |                 |
-| Total          |     0.125 |          |           |                 |
+| Total          |     0.124 |          |           |                 |
 +----------------+-----------+----------+-----------+-----------------+
 
 
@@ -71,8 +71,8 @@ Table of Contents
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
 | Source    | Voltage (V) | Total (A) | Dynamic (A) | Static (A) | Powerup (A) | Budget (A)  | Margin (A) |
 +-----------+-------------+-----------+-------------+------------+-------------+-------------+------------+
-| Vccint    |       1.000 |     0.017 |       0.002 |      0.015 |       NA    | Unspecified | NA         |
-| Vccaux    |       1.800 |     0.026 |       0.008 |      0.018 |       NA    | Unspecified | NA         |
+| Vccint    |       1.000 |     0.018 |       0.003 |      0.015 |       NA    | Unspecified | NA         |
+| Vccaux    |       1.800 |     0.025 |       0.007 |      0.018 |       NA    | Unspecified | NA         |
 | Vcco33    |       3.300 |     0.007 |       0.003 |      0.004 |       NA    | Unspecified | NA         |
 | Vcco25    |       2.500 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
 | Vcco18    |       1.800 |     0.000 |       0.000 |      0.000 |       NA    | Unspecified | NA         |
@@ -142,10 +142,8 @@ Table of Contents
 | Name                   | Power (W) |
 +------------------------+-----------+
 | cw305_top              |     0.027 |
-|   gen_iobuf[0].u_iobuf |     0.001 |
 |   gen_iobuf[2].u_iobuf |     0.001 |
-|   gen_iobuf[5].u_iobuf |     0.001 |
-|   gen_iobuf[6].u_iobuf |     0.001 |
+|   gen_iobuf[4].u_iobuf |     0.001 |
 |   gen_iobuf[7].u_iobuf |     0.001 |
 +------------------------+-----------+
 

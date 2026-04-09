@@ -130,15 +130,23 @@ module cw305_top #(
     reg [7:0] reg_operand_a;
     reg [7:0] reg_operand_b;
     reg       reg_go;
+    // reg_user_led holds a 2-bit value written by the host.
+    // Bit 0 drives led2 (physical LED5 on board).
+    // Bit 1 drives led3 (physical LED6 on board).
+    // Example: write 3 (0b11) → both LEDs ON; write 0 → both OFF.
+    reg [1:0] reg_user_led;
 
     // Write decoder — use reg_datao (data sent by the host)
     always @(posedge usb_clk) begin
-        reg_go <= 1'b0;
+        reg_go <= 1'b0;                          // reg_go auto-clears every cycle
         if (reg_write && reg_addrvalid) begin
             case (reg_address)
                 `REG_OPERAND_A : reg_operand_a <= reg_datao;
                 `REG_OPERAND_B : reg_operand_b <= reg_datao;
                 `REG_CRYPT_GO  : reg_go        <= reg_datao[0];
+                // REG_USER_LED: lower 2 bits select which LEDs are ON.
+                // Value 0=both OFF, 1=LED5 only, 2=LED6 only, 3=both ON.
+                `REG_USER_LED  : reg_user_led  <= reg_datao[1:0];
                 default: ;
             endcase
         end
@@ -181,6 +189,8 @@ module cw305_top #(
             `REG_RESULT_LO : reg_read_data = result_r[7:0];
             `REG_RESULT_HI : reg_read_data = {7'b0, result_r[8]};
             `REG_CRYPT_GO  : reg_read_data = {7'b0, reg_go};
+            // Read back the stored LED value so Python can verify the write.
+            `REG_USER_LED  : reg_read_data = {6'b0, reg_user_led};
             default        : reg_read_data = 8'hAD;
         endcase
     end
@@ -204,9 +214,9 @@ module cw305_top #(
     // -------------------------------------------------------------------------
     assign tio_trigger = (trig_stretch != 6'd0) | reg_go;
 
-    assign led1 = result_r[8];
-    assign led2 = reg_go;
-    assign led3 = 1'b0;
+    assign led1 = result_r[8];          // carry-out from the adder
+    assign led2 = reg_user_led[0];      // LED5: bit 0 of REG_USER_LED
+    assign led3 = reg_user_led[1];      // LED6: bit 1 of REG_USER_LED
 
     // Suppress unused-input warnings from synthesis
     (* keep = "true" *) wire unused = usb_trigger | tio_clkin
