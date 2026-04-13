@@ -1,0 +1,43 @@
+# --- Vivado Temporary/Generated Files ---
+*.jou
+*.log
+*.pb
+*.str
+*.os
+*.o
+*.obj
+.Xil/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.webtalk/
+
+# --- Ignore the entire runs folder ---
+# It is better to move bitstreams/reports to a /delivery or /output folder 
+# rather than trying to un-ignore files inside a massive generated directory.
+*.runs/
+
+# --- Essential Project Files ---
+!*.xpr
+!*.srcs/
+!*.srcs/**/new/*.v
+!*.srcs/**/new/*.sv
+!*.srcs/**/new/*.vhd
+!*.srcs/**/new/*.xdc
+
+# --- IP and Block Designs (Crucial) ---
+!*.srcs/**/*.xci
+!*.srcs/**/*.bd
+!*.srcs/**/*.ui
+
+# --- External Assets ---
+!*.ipynb
+!*.npz
+!*.tcl
+
+# --- OS/Editor Trash ---
+*.swp
+*.swo
+*~
+.DS_Store
